@@ -114,6 +114,8 @@ public class Main {
         Driver driver = new Driver("Сергей Бебебаба");
         driverRepo.save(driver);
         System.out.println("Водитель сохранен: " + driver.getFullName());
+        System.out.println("ID: " + driver.getId());
+        System.out.println("Статус: " + (driver.isActive() ? "АКТИВЕН" : "НЕАКТИВЕН"));
 
         try {
             scheduleService.addShift(driver, new Shift(
