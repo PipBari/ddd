@@ -1,16 +1,18 @@
 package ru;
 
-import ru.dao.DeliveryRoute;
-import ru.dao.Message;
-import ru.dao.OrderStatus;
-import ru.dao.TransportationOrder;
+import ru.dao.*;
+import ru.rep.DriverRepository;
 import ru.rep.TransportationOrderRepository;
+import ru.service.DriverScheduleService;
 import ru.service.FraudDetectionService;
 import ru.service.OrderLifecycleService;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.List;
 
 public class Main {
     public static void main(String[] args) {
@@ -102,6 +104,45 @@ public class Main {
             System.out.println("Найдена заявка со статусом: " + found.getStatus().getValue());
         } else {
             System.out.println("Заявка не найдена");
+        }
+
+        System.out.println("\n--- Работа с графиком водителей ---");
+
+        DriverRepository driverRepo = new DriverRepository();
+        DriverScheduleService scheduleService = new DriverScheduleService();
+
+        Driver driver = new Driver("Сергей Бебебаба");
+        driverRepo.save(driver);
+        System.out.println("Водитель сохранен: " + driver.getFullName());
+
+        try {
+            scheduleService.addShift(driver, new Shift(
+                    LocalDateTime.of(2025, 4, 5, 8, 0),
+                    LocalDateTime.of(2025, 4, 5, 12, 0)
+            ));
+            scheduleService.addShift(driver, new Shift(
+                    LocalDateTime.of(2025, 4, 5, 13, 0),
+                    LocalDateTime.of(2025, 4, 5, 18, 0)
+            ));
+            scheduleService.addShift(driver, new Shift(
+                    LocalDateTime.of(2025, 4, 5, 10, 0),
+                    LocalDateTime.of(2025, 4, 5, 14, 0)
+            ));
+        } catch (IllegalArgumentException e) {
+            System.out.println("Ошибка при добавлении смены: " + e.getMessage());
+        }
+
+        System.out.println("Доступность в 2025-04-05T10:00: " +
+                scheduleService.isDriverAvailableAt(driver, LocalDateTime.of(2025, 4, 5, 10, 0)));
+        System.out.println("Доступность в 2025-04-05T12:30: " +
+                scheduleService.isDriverAvailableAt(driver, LocalDateTime.of(2025, 4, 5, 12, 30)));
+        System.out.println("Доступность в 2025-04-05T18:30: " +
+                scheduleService.isDriverAvailableAt(driver, LocalDateTime.of(2025, 4, 5, 18, 30)));
+
+        System.out.println("Смены на 5 апреля:");
+        List<Shift> shifts = scheduleService.getDriverShiftsForDate(driver, LocalDate.of(2025, 4, 5));
+        for (Shift shift : shifts) {
+            System.out.println(shift.getStart() + " - " + shift.getEnd());
         }
 
         System.out.println("\n=== Конец демонстрации ===");
